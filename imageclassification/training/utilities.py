@@ -1,31 +1,22 @@
 from tqdm import tqdm
-
 import gc
-
 import numpy as np
-
 import torch
 from torch import nn
 import torch.nn.functional as F
 from torch import optim
 import torch_optimizer as optim2
-
-
 from imageclassification.kvs import GlobalKVS
 import imageclassification.training.model as mdl
-
 import matplotlib.pyplot as plt
 import cv2
-
 from imageclassification.training import QHAdam_function
 
 def init_model():
     kvs = GlobalKVS()
     net = mdl.get_model(kvs['args'].experiment, kvs['args'].num_classes)
-
     if kvs['gpus'] > 1:
         net = nn.DataParallel(net)  #.to('cuda')
-
     net = net.to('cuda')
     return net
 
@@ -47,30 +38,21 @@ def init_optimizer(parameters):
 def train_epoch(net, optimizer, train_loader):
     kvs = GlobalKVS()
     net.train(True)
-
     running_loss = 0.0
     n_batches = len(train_loader)
     
     epoch = kvs['cur_epoch']
     max_ep = kvs['args'].n_epochs
     print("epoch no: ",epoch+1)
-
     device = next(net.parameters()).device
-
     pbar = tqdm(total=n_batches)  # the number of expected iterations here is n_batches
-    
-    
+        
     for i, batch in enumerate(train_loader):
         optimizer.zero_grad() #set the gradients to zero before starting backprob,PyTorch accumulates the gradients on subsequent backward passes
         #labels = batch['label'].long().to(device)
         labels = batch['label'].to(device)
         inputs = batch['img'].to(device)
-        #print("inputs shape: ",inputs[0].shape)     #inputs shape[]:  torch.Size([3, 64, 64])
-      
-#        if i < 15:
-#            fig = plt.figure(figsize=(10,10))
-#            plt.imshow(cv2.resize(inputs[0][0].squeeze().to("cpu").numpy(), (64, 64)), cmap=plt.cm.gray)
-#            fig.savefig(f'{i}.png', dpi=fig.dpi)
+        #print("inputs shape: ",inputs[0].shape)     #mednist,  torch.Size([3, 64, 64]) 
 
         outputs = net(inputs)
         loss = F.cross_entropy(outputs, labels)
@@ -87,10 +69,8 @@ def train_epoch(net, optimizer, train_loader):
 
     gc.collect()
     pbar.close()
-
     # train_loss
     return running_loss / n_batches
-
 
 def validate_epoch(net, test_loader):
     kvs = GlobalKVS()
@@ -100,14 +80,10 @@ def validate_epoch(net, test_loader):
     n_batches = len(test_loader)
     epoch = kvs['cur_epoch']
     max_ep = kvs['args'].n_epochs
-
     device = next(net.parameters()).device
-
     probs_lst = []
     gt_lst = []
-
     pbar = tqdm(total=n_batches)  #,disable = True
-
     correct = 0
     all_samples = 0
     with torch.no_grad():  # stop autograd from tracking history on Tensors; autograd records computation history on the fly to calculate gradients later
@@ -115,14 +91,6 @@ def validate_epoch(net, test_loader):
             #labels = batch['label'].long().to(device)
             labels = batch['label'].to(device)
             inputs = batch['img'].to(device)
-            #print("inputs shape: ",inputs[0].shape)    #torch.Size([3, 64, 64])
-                
-#            if i == 70 :
-#                print("batch: ",batch)
-#                fig = plt.figure(figsize=(10,10))
-#                plt.imshow(cv2.resize(inputs[0][0].squeeze().to("cpu").numpy(), (64, 64)), cmap=plt.cm.gray)
-#                fig.savefig(f'{i}.png', dpi=fig.dpi)
-
             outputs = net(inputs)
 
             loss = F.cross_entropy(outputs, labels)
