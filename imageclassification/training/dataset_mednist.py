@@ -1,20 +1,13 @@
 import os
 import pickle
 import copy
-
 from termcolor import colored
-
 import torch
 import torch.utils.data as data
-
 from sklearn.model_selection import StratifiedKFold
-
 import numpy as np
-
 import pandas as pd
-
 import solt.data as sld
-
 import cv2
 cv2.ocl.setUseOpenCL(False)
 cv2.setNumThreads(0)
@@ -61,7 +54,6 @@ class ImageClassificationDataset(data.Dataset):
     def __len__(self):
         return self.split.shape[0]
 
-
 def unpickle(file):
     """
     Source: https://www.cs.toronto.edu/~kriz/cifar.html
@@ -73,11 +65,7 @@ def unpickle(file):
         cifar_dict = pickle.load(fo, encoding='bytes')
 
     return cifar_dict
-    
-
-
-
-
+ 
 from torchvision import transforms
 
 transform = transforms.Compose([
@@ -241,8 +229,7 @@ def init_metadata():
         cv_split = [x for x in skf.split(kvs['metadata']['Filename'].astype(str),
                                          kvs['metadata']['Label'],
                                          kvs['metadata']['Group'],
-                                         kvs['metadata']['ID'])]
-                                         
+                                         kvs['metadata']['ID'])]                                 
    
     else:
         raise NotImplementedError
@@ -250,15 +237,12 @@ def init_metadata():
     kvs.update('cv_split_all_folds', cv_split)
     kvs.save_pkl(os.path.join(kvs['args'].snapshots, kvs['args'].dataset_name, kvs['snapshot_name'], 'session.pkl'))
 
-
 def img_labels2solt(inp):
     label, img = inp
     return sld.DataContainer((img, label), fmt='IL')
 
-
 def unpack_solt_data(dc: sld.DataContainer):
     return dc.data
-
 
 def apply_by_index(items, transform, idx=0):
     """
