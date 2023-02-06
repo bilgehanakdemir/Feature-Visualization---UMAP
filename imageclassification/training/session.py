@@ -2,15 +2,10 @@ import sys
 import os
 import time
 import random
-
 import numpy as np
-
 from termcolor import colored
-
 from functools import partial
-
 from tensorboardX import SummaryWriter
-
 import torch
 from torch.utils.data import DataLoader
 
@@ -37,9 +32,7 @@ PAD_TO = 66
 CROP_SIZE = 64
 
 DEBUG = sys.gettrace() is not None
-
-
-    
+  
 
 def init_session():
     #if not torch.cuda.is_available():
@@ -180,7 +173,6 @@ def init_loaders(dataset, x_train, x_val):
 #       fig.savefig('samples.png', dpi=fig.dpi)
 #       #plt.show()
 #       #print(f"Label: {label}")
-
 
     
     return train_loader, val_loader
