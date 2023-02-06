@@ -19,8 +19,8 @@ from torchvision.transforms import ToTensor
 
 from abc import abstractmethod
 
-train_dir = '/scratch/project_2006161/cifar-10/data/MednistRGB_split2/train/'
-val_dir = '/scratch/project_2006161/cifar-10/data/MednistRGB_split2/val/'
+train_dir = 'train data location'
+val_dir = 'validation data location'
 
 class ImageClassificationDataset(data.Dataset):
     def __init__(self, dataset, split, color_space='rgb', transformations=None):
@@ -35,11 +35,8 @@ class ImageClassificationDataset(data.Dataset):
 
         entry = self.split.iloc[ind]
         indx = entry.ID-1 # ID is a row number starting from 1
-        
-        
-        
+           
         dimg = self.dataset[indx, :, :, :]   #### read images one by one, read from current filename
-        
 
         if 'yuv' in self.color_space:
             dimg = cv2.cvtColor(dimg, cv2.COLOR_BGR2YUV)
