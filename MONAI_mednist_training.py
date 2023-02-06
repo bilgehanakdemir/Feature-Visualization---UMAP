@@ -1,32 +1,21 @@
 import os
 import pickle
 import copy
-
 from termcolor import colored
-
 import torch
 print("cuda available: ", torch.cuda.is_available())
 import torch.utils.data as data
-
 from sklearn.model_selection import StratifiedKFold
-
 #from imageclassification.training import qhm
-
 import numpy as np
-
 import pandas as pd
-
 import solt.data as sld
-
 import cv2
 cv2.ocl.setUseOpenCL(False)
 cv2.setNumThreads(0)
-
 from imageclassification.kvs import GlobalKVS
-
 from PIL import Image
 import matplotlib.pyplot as plt
-
 from monai.apps import download_and_extract
 from monai.config import print_config
 from monai.metrics import ROCAUCMetric
@@ -51,11 +40,8 @@ from monai.utils import set_determinism
 
 import imageclassification.training.model as mdl
 
-data_dir = '/scratch/project_2006161/cifar-10/data/MedNIST2/'
-#data_dir = '/scratch/project_2006161/cifar-10/data/MedNIST2_3D/'
-path1 = '/scratch/project_2006161/cifar-10/data/MednistRGB/'
-
-
+data_dir = ''
+path1 = ''
 
 class_names = sorted([x for x in os.listdir(data_dir) if os.path.isdir(os.path.join(data_dir, x))])
 print("class_names: ",class_names)
@@ -64,10 +50,6 @@ num_class = len(class_names)
 image_files = [[os.path.join(data_dir, class_name, x) 
                 for x in os.listdir(os.path.join(data_dir, class_name))] 
                for class_name in class_names]
-
-
-
-#print("image_files type: ", image_files[0][0])
 
 classes = {
     'AbdomenCT' : [100, 100, 255],
@@ -111,8 +93,6 @@ for i in range(num_total):
         trainX.append(image_file_list[i])
         trainY.append(image_label_list[i])
     
-
-
 print("Training sample =",len(trainX),"Validation sample =", len(valX), "Test sample =",len(testX))
 
 train_transforms = Compose([
@@ -137,10 +117,6 @@ y_pred_trans = Compose([Activations(softmax=True)])
 y_trans = Compose([AsDiscrete(to_onehot=num_class)])
 
 
-
-
-
-
 class MedNISTDataset(data.Dataset):
 
     def __init__(self, image_files, labels, transforms):
@@ -163,7 +139,6 @@ val_loader = DataLoader(val_ds, batch_size=300, num_workers=2)
 test_ds = MedNISTDataset(testX, testY, val_transforms)
 test_loader = DataLoader(test_ds, batch_size=300, num_workers=2)
 
-
 import torch_optimizer as optim2
 import imageclassification.training.models as mdls
 from torch.optim.lr_scheduler import MultiStepLR  
@@ -173,32 +148,6 @@ import gc
 import umap
 import torchvision.datasets as dset
 import torchvision.transforms as T
-
-
-#path_train = '/scratch/project_2006161/cifar-10/data/MednistRGB_split/train/'
-#path_val = '/scratch/project_2006161/cifar-10/data/MednistRGB_split/val/'
-#
-#transform = T.Compose([T.RandomHorizontalFlip(),T.ToTensor()])
-#batch_size = 64
-#
-#
-#df = pd.DataFrame({'Class': class_names, 'FilePath': training_img_lst})
-#
-#
-#
-#for img in os.listdir(path_train):
-#    
-#
-#    train_data = dset.ImageFolder(path_train,transform=transform)
-#    loaded_train = DataLoader(train_data,batch_size=batch_size,shuffle=True)
-#        
-#for img in os.listdir(path_val):
-#    
-#    validation_data = dset.ImageFolder(path_val,transform=transform)
-#    loaded_validation = DataLoader(validation_data,batch_size=batch_size,shuffle=False)  
-#
-#print('loaded_train:', len(loaded_train))
-
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 print('Device:', device)  
@@ -210,7 +159,6 @@ optimizer =  optim2.QHM(model.parameters(), weight_decay=1e-5, **optim2.QHM.from
 print("optimizer:",optimizer)
 
 scheduler = MultiStepLR(optimizer, milestones=[40, 50], gamma=0.2)
-
 num_epoch = 300
 max_ep = num_epoch
 
@@ -283,8 +231,7 @@ for epoch in range(num_epoch):
 print(
     f"train completed, best_metric: {best_metric:.4f} "
     f"at epoch: {best_metric_epoch}")
-       
-       
+             
 fig = plt.figure("train", (12, 6))
 plt.subplot(1, 2, 1)
 plt.title("Epoch Average Loss")
@@ -299,8 +246,7 @@ y = metric_values
 plt.xlabel("epoch")
 plt.plot(x, y)
 #plt.show()
-plt.savefig('Mednist_Loss_AccQHM300_Upd.png', dpi=fig.dpi)
-
+plt.savefig('MONAI_mednist_loss.png', dpi=fig.dpi)
 
 
 
