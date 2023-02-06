@@ -3,11 +3,11 @@ This repository consists of the feature visualization of VGG-16 deep model by tr
 
 UMAP Feature Visualization of CIFAR-10:
 
-![UMAP_5000](https://user-images.githubusercontent.com/56603094/216983434-629170f1-ac2f-4976-a030-20b71c38be6c.png | width=100)
+![UMAP_5000](https://user-images.githubusercontent.com/56603094/216983434-629170f1-ac2f-4976-a030-20b71c38be6c.png | width=50)
 
 
 
 UMAP Feature Visualization of MedNIST:
 
 
-![image](https://user-images.githubusercontent.com/56603094/216983863-27b8d469-a4f8-4827-acf8-4d3f1526ff43.png | width=100)
+![image](https://user-images.githubusercontent.com/56603094/216983863-27b8d469-a4f8-4827-acf8-4d3f1526ff43.png | width=50)
