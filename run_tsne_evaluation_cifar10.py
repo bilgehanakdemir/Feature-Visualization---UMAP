@@ -1,55 +1,37 @@
 import sys
 print(sys.version, sys.platform, sys.executable)
-
 import argparse
 import random
 import os
 import pickle
 import gc
-
 #from cifar10_dataset import colors_per_class
-
 from functools import partial
-
 import numpy as np
 import cv2
 import pandas as pd
 print('Pandas version:', pd.__version__)
-
 import torch
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 print('Device:', device)
 print('Torch version:', torch.__version__)
-
 from torch.utils.data import DataLoader
 import torch.nn.functional as F
-
 from torchvision import transforms as tv_transforms
-
 from sklearn.metrics import confusion_matrix
-
 from tqdm import tqdm
-
 import solt.transforms as slt
 import solt.core as slc
-
 from imageclassification.training.dataset import apply_by_index, img_labels2solt, unpack_solt_data
 import imageclassification.training.model as mdl
 from imageclassification.training.dataset import ImageClassificationDataset, init_dataset
-
 import cv2
 cv2.ocl.setUseOpenCL(False)
 cv2.setNumThreads(0)
-
 import matplotlib.pyplot as plt
-
 from sklearn.manifold import TSNE
-
-
 from time import perf_counter, sleep
-
 start = perf_counter()
-
 
 PAD_TO = 34
 CROP_SIZE = 32
@@ -124,19 +106,10 @@ def get_features(model, features, loader):
         for i, batch in enumerate(loader):
             
             labels += batch['label'].long().to(device)
-            #print("labels",labels)
             inputs = batch['img'].to(device)
-            #image_paths += batch['image_path']
-            #print(i)
-            #print(batch)
-            #exit()
-
-            #outputs, features = model(inputs)
             outputs = model(inputs)           # return x for visualization, output shape: (10000,10)
-            
             labels = torch.Tensor(labels).to(device)
             labels = labels.type(torch.LongTensor).to(device)
-            
             loss = F.cross_entropy(outputs,labels)  
             probs_batch = F.softmax(outputs, 1).data.to('cpu').numpy()                ### what is probs_batch? why softmax?  probs_batch shape: (10000,10)
             
@@ -165,12 +138,9 @@ def get_features(model, features, loader):
                 features = current_features
                      
             tsne = TSNE(n_components=2).fit_transform(features)   #features shape: (10000,10)
-            #tsne = tsne[0:522]  #tsne shape: (500,2)
             
             tx = tsne[:, 0]
             ty = tsne[:, 1]
-            
-            #print("labels type:",type(labels))
             
             def visualize_tsne_points(tx, ty, labels):
                 labels = labels.int().tolist()
@@ -185,14 +155,6 @@ def get_features(model, features, loader):
                 for i in classes:
                   list_cl.append(i)
                 for category in colors_per_class:
-                    # find the samples of the current class in the data
-                    #indices = []
-                    
-                    #for i, l in enumerate(labels):
-                    #  print("category: ", category)
-                    #  print("l: ", l)
-                    #  if l == category:
-                    #     indices.append(i)
                     indices = [i for i, l in enumerate(labels) if l == category]
                     
                     print("indices length:",len(indices))
@@ -214,7 +176,7 @@ def get_features(model, features, loader):
 
                 # finally, show the plot
                 #plt.show()
-                fig.savefig('TSNE_2D.png', dpi=fig.dpi)   
+                fig.savefig('TSNE_cifar10.png', dpi=fig.dpi)   
             
             #print("labels:",labels)
             #print("tx:",tx)
@@ -229,7 +191,7 @@ def get_features(model, features, loader):
     # val_loss, preds, gt, val_acc
     return running_loss / n_batches, np.array(probs_lst), np.array(gt_lst), correct / all_samples
 
-def main():  ### what's going on here!
+def main():
     parser = argparse.ArgumentParser()
 
     parser.add_argument('--path', type=str, default='data1/cifar10/train')
@@ -261,8 +223,6 @@ if __name__ == "__main__":
     parser.add_argument('--snapshots', default='snapshots/CIFAR10')
     parser.add_argument('--snapshot', default='2022_08_12_16_16')  # subfolder in snapshots optimizer epoch500= QHM
     #parser.add_argument('--snapshot', default='2022_08_08_17_19')  # subfolder in snapshots optimizer = QHM
-    #parser.add_argument('--snapshot', default='2022_07_26_10_31')  # subfolder in snapshots optimizer = sgd
-    #parser.add_argument('--snapshot', default='2020_01_01_00_01') # subfolder in snapshots
 
     args = parser.parse_args()
 
@@ -328,10 +288,8 @@ if __name__ == "__main__":
 
     acc = np.mean(cm.diagonal().astype(float) / (cm.sum(axis=1) + 1e-9))
     print('Acc: ', acc)
-    
-    
+        
 
 end = perf_counter()
 
 print(f"Time taken to execute code : {end-start}")
-   
