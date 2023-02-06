@@ -337,6 +337,30 @@ if __name__ == "__main__":
     eval_dataset = ImageClassificationDataset(dataset, metadata, 'rgb', eval_trf)
 
     eval_loader = DataLoader(eval_dataset, batch_size=10000, num_workers=1)
+    
+    net = mdl.get_model(args.experiment, args.num_classes)
+    print(net)
+    net.load_state_dict(torch.load(previous_model, map_location=lambda storage, location: storage))
+    
+    device = next(net.parameters()).device
+    net = net.to(device)
+    
+    #features = np.array(features)
+    #features = features.reshape(-1, 1)
+    #print("features shape:",features.shape)
+    #tsne = TSNE(n_components=2).fit_transform(features)
+    
+    eval_out = get_features(net, device, eval_loader)
+    eval_loss, preds, gt, eval_acc = eval_out
 
+    cm = confusion_matrix(gt, preds.argmax(1))
+    print('Confusion Matrix: \n', cm)
 
-���
+    acc = np.mean(cm.diagonal().astype(float) / (cm.sum(axis=1) + 1e-9))
+    print('Acc: ', acc)
+    
+    
+
+end = perf_counter()
+
+print(f"Time taken to execute code : {end-start}")
