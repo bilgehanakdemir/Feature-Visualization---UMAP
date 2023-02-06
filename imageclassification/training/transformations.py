@@ -1,21 +1,14 @@
 import os
-
 from termcolor import colored
-
 from functools import partial
-
 import numpy as np
-
 from torch.utils.data import DataLoader
-
 from torchvision import transforms
-
 import solt.transforms as slt
 import solt.core as slc
-
 from imageclassification.training.dataset import apply_by_index, img_labels2solt, unpack_solt_data
 
-PAD_TO = 68    #### from 34 to 68
+PAD_TO = 68    #### from 34 to 68 from cifar10 to mednist
 CROP_SIZE = 64   #convert grayscale image to rgb////////////// from 32 to 64
 
 
@@ -52,7 +45,6 @@ def init_mean_std(dataset, batch_size, n_threads, save_mean_std, color_space='rg
                 [mean_vector.astype(np.float32), std_vector.astype(np.float32)])
 
     return mean_vector, std_vector
-
 
 def init_train_augs(crop_mode='r', pad_mode='r'):
     trf = transforms.Compose([
