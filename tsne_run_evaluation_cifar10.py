@@ -78,10 +78,6 @@ def get_features(model, features, loader):
     model.eval()
     model.to(device)
     
-    # read the dataset and initialize the data loader
-    #dataset = AnimalsDataset(dataset, num_images)
-    #dataloader = torch.utils.data.DataLoader(dataset, batch_size=batch, collate_fn=collate_skip_empty, shuffle=True)
-    
     features = None
     
     #store the image labels and paths to visualize them later
@@ -111,9 +107,9 @@ def get_features(model, features, loader):
             labels = torch.Tensor(labels).to(device)
             labels = labels.type(torch.LongTensor).to(device)
             loss = F.cross_entropy(outputs,labels)  
-            probs_batch = F.softmax(outputs, 1).data.to('cpu').numpy()                ### what is probs_batch? why softmax?  probs_batch shape: (10000,10)
+            probs_batch = F.softmax(outputs, 1).data.to('cpu').numpy() 
             
-            gt_batch = batch['label'].numpy()     #gt_batch: [3 8 8 ... 5 1 7]
+            gt_batch = batch['label'].numpy() 
 
             probs_lst.extend(probs_batch.tolist())
             gt_lst.extend(gt_batch.tolist())
@@ -125,7 +121,6 @@ def get_features(model, features, loader):
             correct += np.equal(pred, np.array(gt_lst)).sum()
             
             all_samples += len(np.array(gt_lst))
-
             gc.collect()
             pbar.set_description(
                 f"Evaluation accuracy: {100. * correct / all_samples:.0f}%")
@@ -182,9 +177,7 @@ def get_features(model, features, loader):
             #print("tx:",tx)
             #print("ty:",ty)
             visualize_tsne_points(tx, ty, labels)        
-            
-            
-           
+              
         gc.collect()
         pbar.close()
         
