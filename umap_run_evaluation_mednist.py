@@ -1,55 +1,36 @@
 import sys
 print(sys.version, sys.platform, sys.executable)
-
 import argparse
 import random
 import os
 import pickle
 import gc
-
-#from cifar10_dataset import colors_per_class
-
 from functools import partial
-
 import numpy as np
 import cv2
 import pandas as pd
-
 import torch
 print('Torch version:', torch.__version__)
-
 from torch.utils.data import DataLoader
 import torch.nn.functional as F
-
 from torchvision import transforms as tv_transforms
-
 from sklearn.metrics import confusion_matrix
-
 from tqdm import tqdm
-
 import solt.transforms as slt
 import solt.core as slc
-
 from imageclassification.training.dataset import apply_by_index, img_labels2solt, unpack_solt_data
 import imageclassification.training.model as mdl
 from imageclassification.training.dataset import ImageClassificationDataset, init_dataset
-
 import cv2
 cv2.ocl.setUseOpenCL(False)
 cv2.setNumThreads(0)
-
 import matplotlib.pyplot as plt
-
 #from sklearn.manifold import TSNE
-
 import umap
 import time
-
 from time import perf_counter, sleep
 torch.backends.cudnn.enabled = False
-
 start_time = time.time()
-
 start = perf_counter()
 
 
@@ -58,32 +39,6 @@ CROP_SIZE = 64
 
 DEBUG = sys.gettrace() is not None
 print('Debug: ', DEBUG)
-
-#classes = {
-#    'airplane' : [100, 100, 255],
-#    'automobile' : [0, 0, 0],
-#    'bird' : [10, 189, 227],
-#    'cat' : [128, 80, 128],
-#    'deer' : [255, 159, 243],
-#    'dog' : [254, 202, 87],
-#    'frog' : [16, 172, 132],
-#    'horse' : [255, 107, 107],
-#    'ship' : [87, 101, 116],
-#    'truck' : [52, 31, 151],
-#}   
-#
-#colors_per_class = {
-#    0 : [100, 100, 255],
-#    1 : [0, 0, 0],
-#    2 : [10, 189, 227],
-#    3 : [128, 80, 128],
-#    4 : [255, 159, 243],
-#    5 : [254, 202, 87],
-#    6 : [16, 172, 132],
-#    7 : [255, 107, 107],
-#    8 : [87, 101, 116],
-#    9 : [52, 31, 151],
-#}
 
 classes = {
     'AbdomenCT' : [254, 202, 87],
@@ -102,7 +57,6 @@ colors_per_class = {
     4 : [255, 159, 243],
     5 : [100, 100, 255],
 }
-
 
 def get_features(model, features, loader):
 
@@ -138,39 +92,18 @@ def get_features(model, features, loader):
     all_samples = 0
     with torch.no_grad():
         for i, batch in enumerate(loader):
-            
             labels += batch['label'].long().to(device)
-            print("labels:",len(labels))
             inputs = batch['img'].to(device)
-            print("img shape:",inputs.shape)
-            
-#            if i < 10:
-#                fig = plt.figure(figsize=(10,10))
-#                plt.imshow(cv2.resize(inputs[0][0].squeeze().to("cpu").numpy(), (64, 64)), cmap=plt.cm.gray)
-#                fig.savefig(f'{i}.png', dpi=fig.dpi)
-            
-            #image_paths += batch['image_path']
-            #print(i)
-            #print(batch)
-            #exit()
-            
-#            labels += batch[1].long().to(device)
-#            #print("labels",labels)
-#            inputs = batch[0].to(device)
-
-            #outputs, features = model(inputs)
             outputs = model(inputs)           # return x for visualization, output shape: (10000,10)
-            
             labels = torch.Tensor(labels).to(device)
             labels = labels.type(torch.LongTensor).to(device)
-            
-            
+     
             loss = F.cross_entropy(outputs,labels)
             
             probs_batch = F.softmax(outputs, 1).data.to('cpu').numpy() 
-            #probs_batch = F.softmax(outputs, 1).detach().cpu().numpy()              ### what is probs_batch? why softmax?  probs_batch shape: (10000,10)
+            #probs_batch = F.softmax(outputs, 1).detach().cpu().numpy()
             
-            gt_batch = batch['label'].numpy()     #gt_batch: [3 8 8 ... 5 1 7]
+            gt_batch = batch['label'].numpy()
 
             probs_lst.extend(probs_batch.tolist())
             gt_lst.extend(gt_batch.tolist())
@@ -200,15 +133,9 @@ def get_features(model, features, loader):
             embedding  = umap.UMAP(n_neighbors=100,min_dist=0.3,metric='correlation').fit_transform(features)   #features shape: (10000,10)
             print("UMAP Embedding:", embedding.shape)
             #reducer2 = UMAP(n_neighbors=100, n_components=3, n_epochs=1000, min_dist=0.5, local_connectivity=2, random_state=42)
-            
-            
+ 
             tx = embedding[:, 0]
             ty = embedding[:, 1]
-            
-            #print("labels type:",type(labels))
-            
-            
-            #print("labels type:",type(labels))
             
             def visualize_umap_points(tx, ty, labels):
                 labels = labels.int().tolist()
@@ -223,22 +150,8 @@ def get_features(model, features, loader):
                 list_cl = []
                 for i in classes:
                   list_cl.append(i)
-                #print(list_cl)
-                #assert 1 == 2
                 for category in colors_per_class:
-                    #sys.exit()
-                    # find the samples of the current class in the data
-                    #indices = []
-                    
-                    #for i, l in enumerate(labels):
-                    #  print("category: ", category)
-                    #  print("l: ", l)
-                    #  if l == category:
-                    #     indices.append(i)
-                    #indices = [i for i, l in enumerate(labels) if l == i]
                     indices = [i for i, l in enumerate(labels) if l == category]
-                    
-                    #print("indices:",indices)
 
                     # extract the coordinates of the points of this class only
                     current_tx = np.take(tx, indices)
@@ -248,27 +161,16 @@ def get_features(model, features, loader):
                     # convert the class color to matplotlib format:
                     # BGR -> RGB, divide by 255, convert to np.array
                     color = np.array([colors_per_class[category][::-1]], dtype=np.float64) / 255
-                  
-
-                    # add a scatter plot with the correponding color and label
-                    #device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
                     
                     ax.scatter(current_tx, current_ty, c=color, label=list_cl[category])
 
                   # build a legend using the labels we set previously
                 ax.legend(loc='best')
-
-                # finally, show the plot
                 #plt.show()
-                fig.savefig('UMAP_g18.png', dpi=fig.dpi)   
-            
-            #print("labels:",labels)
-            #print("tx:",tx)
-            #print("ty:",ty)
+                fig.savefig('UMAP_mednist.png', dpi=fig.dpi)   
+
             visualize_umap_points(tx, ty, labels)        
-            
-            
-           
+
         gc.collect()
         pbar.close()
         
@@ -284,16 +186,10 @@ if __name__ == "__main__":
                                                    'CIFAR100',
                                                    'MedMNIST'
                                                    ], default='MedMNIST')
-    parser.add_argument('--snapshots', default='snapshots/MedMNIST') # /scratch/project_2006161/cifar-10/snapshots/MedMNIST/2022_12_23_16_46/ 
+    parser.add_argument('--snapshots', default='snapshots/MedMNIST') 
     parser.add_argument('--snapshot', default='2023_01_16_13_47')
-    #parser.add_argument('--snapshot', default='2022_12_23_16_46')
-    #parser.add_argument('--snapshot', default='2022_11_07_17_20')    #nvidia
     #parser.add_argument('--snapshot', default='2022_08_12_16_16')  # subfolder in snapshots optimizer epoch500= QHM
-    #parser.add_argument('--snapshot', default='2022_08_08_17_19')  # subfolder in snapshots optimizer epoch300= QHM
-    #parser.add_argument('--snapshot', default='2022_07_26_10_31')  # subfolder in snapshots optimizer = sgd
-    #parser.add_argument('--snapshot', default='2020_01_01_00_01') # subfolder in snapshots
     
-
     args = parser.parse_args()
 
     with open(os.path.join(args.snapshots, args.snapshot, 'session.pkl'), 'rb') as f:
@@ -365,4 +261,3 @@ if __name__ == "__main__":
 end = perf_counter()
 
 print(f"Time taken to execute code : {end-start}")
-   
