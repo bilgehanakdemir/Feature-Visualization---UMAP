@@ -140,14 +140,13 @@ def get_features(model, features, loader):
             #exit()
 
             #outputs, features = model(inputs)
-            outputs = model(inputs)           # return x for visualization, output shape: (10000,10)
+            outputs = model(inputs)         
             
             labels = torch.Tensor(labels).to(device)
             labels = labels.type(torch.LongTensor).to(device)
             
             loss = F.cross_entropy(outputs,labels)  
-            probs_batch = F.softmax(outputs, 1).data.to('cpu').numpy()                ### what is probs_batch? why softmax?  probs_batch shape: (10000,10)
-            
+            probs_batch = F.softmax(outputs, 1).data.to('cpu').numpy()                     
             gt_batch = batch['label'].numpy()     #gt_batch: [3 8 8 ... 5 1 7]
 
             probs_lst.extend(probs_batch.tolist())
@@ -165,14 +164,14 @@ def get_features(model, features, loader):
             pbar.set_description(
                 f"Evaluation accuracy: {100. * correct / all_samples:.0f}%")
             pbar.update()          
-            ############### added by B.
+    
             current_features = outputs.cpu().numpy()
             if features is not None:
                 features = np.concatenate((features, current_features))
             else:
                 features = current_features
                      
-            #tsne = TSNE(n_components=2).fit_transform(features)   #features shape: (10000,10)
+            #tsne = TSNE(n_components=2).fit_transform(features)   #features shape: (10000,10) 
             
             print("features:", features.shape)
             embedding  = umap.UMAP(n_neighbors=50,min_dist=0.3,metric='correlation').fit_transform(features)   #features shape: (10000,10)
